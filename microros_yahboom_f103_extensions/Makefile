@@ -46,11 +46,11 @@ BUILD_DIR = $(EXTENSIONS_DIR)/build
 ######################################
 # C sources
 C_SOURCES =  \
-Src/main.c \
-Src/freertos.c \
-Src/stm32f1xx_it.c \
-Src/stm32f1xx_hal_msp.c \
-Src/stm32f1xx_hal_timebase_tim.c \
+Core/Src/main.c \
+Core/Src/freertos.c \
+Core/Src/stm32f1xx_it.c \
+Core/Src/stm32f1xx_hal_msp.c \
+Core/Src/stm32f1xx_hal_timebase_tim.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_rcc_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c \
@@ -63,7 +63,7 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_tim_ex.c \
-Src/system_stm32f1xx.c \
+Core/Src/system_stm32f1xx.c \
 Middlewares/Third_Party/FreeRTOS/Source/croutine.c \
 Middlewares/Third_Party/FreeRTOS/Source/event_groups.c \
 Middlewares/Third_Party/FreeRTOS/Source/list.c \
@@ -74,10 +74,7 @@ Middlewares/Third_Party/FreeRTOS/Source/timers.c \
 Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3/port.c \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c \
-Src/custom_memory_manager.c \
-Src/allocators.c \
-Src/microros_transports.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_uart.c \
 $(wildcard $(UROS_APP_FOLDER)/*.c)
 
 # Removing heap4 manager while being polite with STM32CubeMX
@@ -86,7 +83,7 @@ C_SOURCES := $(filter-out Middlewares/Third_Party/FreeRTOS/Source/portable/MemMa
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f103rctx.s
+Core/Startup/startup_stm32f103rctx.s
 
 
 #######################################
@@ -142,7 +139,7 @@ AS_INCLUDES =  \
 
 # C includes
 C_INCLUDES =  \
--IInc \
+-ICore/Inc \
 -IDrivers/STM32F1xx_HAL_Driver/Inc \
 -IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy \
 -IMiddlewares/Third_Party/FreeRTOS/Source/include \
@@ -150,32 +147,37 @@ C_INCLUDES =  \
 -IMiddlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3 \
 -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/CMSIS/Include \
--Iinclude \
--Iinclude/private \
 -I$(UROS_APP_FOLDER)
 
 MICROROS_INCLUDES += $(shell find $(UROS_DIR)/install -name 'include' | sed -E "s/(.*)/-I\1/")
 INCLUDE_ROS2_PACKAGES = $(shell cd $(UROS_DIR) && colcon list | awk '{print $$1}' | awk -v d=" " '{s=(NR==1?s:s d)$$0}END{print s}')
 MICROROS_INCLUDES += $(foreach pkg, $(INCLUDE_ROS2_PACKAGES), -I$(UROS_DIR)/install/$(pkg)/include/$(pkg))
 MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include
-#MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include/FreeRTOS_POSIX
+MICROROS_INCLUDES += -I$(EXTENSIONS_DIR)/include/FreeRTOS_POSIX
 C_INCLUDES += $(MICROROS_INCLUDES)
 
-#COLCON_INCLUDES += $(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include
-COLCON_INCLUDES += $(EXTENSIONS_DIR)/include
-#COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/private
-#COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX
-#COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX/sys
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/FreeRTOS-Plus-POSIX/include
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/include
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/private
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/include/FreeRTOS_POSIX/sys
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/hal/interface
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/modules/interface
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/utils/interface
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/config
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/src/drivers/interface
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/posix
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/Inc
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/STM32F1xx_HAL_Driver/Inc
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/CMSIS/Device/ST/STM32F1xx/Include
 COLCON_INCLUDES += $(EXTENSIONS_DIR)/Drivers/CMSIS/Include
+COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/system
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/compat/posix
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/compat/posix/arpa
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/compat/posix/net
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/compat/posix/sys
+# COLCON_INCLUDES += $(EXTENSIONS_DIR)/Middlewares/Third_Party/LwIP/src/include/compat/stdc
 COLCON_INCLUDES_STR := $(foreach x,$(COLCON_INCLUDES),$(x)\n)
 
 # compile gcc flags
@@ -196,7 +198,7 @@ ARCHCPUFLAGS = $(MCU) $(C_DEFS) $(OPT) -Wall -fdata-sections -ffunction-sections
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F103RCTx_FLASH.ld
+LDSCRIPT = STM32F103RCTX_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys
